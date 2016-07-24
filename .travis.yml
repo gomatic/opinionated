@@ -1,7 +1,6 @@
 language: go
 go:
-  - 1.5
-  - tip
+  - 1.6
 notificaitons:
   email:
     recipients:
@@ -10,6 +9,5 @@ notificaitons:
     on_failure: always
 install:
   - go get -t ./...
-  - git submodule update --init
 script:
   - go test -v
