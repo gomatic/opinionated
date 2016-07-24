@@ -1,0 +1,27 @@
+[submodule "vendor/application/vendor/github.com/markbates/goth"]
+	path = vendor/application/vendor/github.com/markbates/goth
+	url = https://github.com/markbates/goth.git
+[submodule "public/css/lib/font-awesome"]
+	path = public/css/lib/font-awesome
+	url = https://github.com/gomatic/opinionated-css-font-awesome.git
+[submodule "public/css/lib/bootstrap"]
+	path = public/css/lib/bootstrap
+	url = https://github.com/gomatic/opinionated-css-bootstrap.git
+[submodule "public/js/lib/bootstrap"]
+	path = public/js/lib/bootstrap
+	url = https://github.com/gomatic/opinionated-js-bootstrap.git
+[submodule "public/js/lib/jquery"]
+	path = public/js/lib/jquery
+	url = https://github.com/gomatic/opinionated-js-jquery.git
+[submodule "vendor/gpplication/vendor/ithub.com/eknkc/amber"]
+	path = vendor/application/vendor/github.com/eknkc/amber
+	url = https://github.com/eknkc/amber.git
+[submodule "vendor/gpplication/vendor/ithub.com/go-kit/kit"]
+	path = vendor/application/vendor/github.com/go-kit/kit
+	url = https://github.com/go-kit/kit.git
+[submodule "vendor/application/vendor/github.com/gorilla/context"]
+	path = vendor/application/vendor/github.com/gorilla/context
+	url = https://github.com/gorilla/context.git
+[submodule "vendor/github.com/urfave/cli"]
+	path = vendor/github.com/urfave/cli
+	url = https://github.com/urfave/cli.git
