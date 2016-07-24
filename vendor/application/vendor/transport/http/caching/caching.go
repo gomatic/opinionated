@@ -11,6 +11,7 @@ import (
 
 type cached struct {
 	next    http.Handler
+	maxAge  int
 	options []string
 }
 
@@ -19,6 +20,10 @@ func (c cached) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	now := time.Now()
 	utc := now.UTC()
 	tomorrow := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, 1)
+	age := c.maxAge
+	if age <= 0 {
+		age = int(tomorrow.Sub(now).Seconds())
+	}
 
 	nows := fmt.Sprintf("%8x", utc.UnixNano())
 	rnds := fmt.Sprintf("%8x", rand.Int63())
@@ -52,13 +57,17 @@ func (c cached) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		hs.Set("Pragma", "no-cache")
 		hs.Set("Expires", "0")
 	} else {
-		hs.Set("Cache-Control", fmt.Sprintf("public, max-age=%v", int(tomorrow.Sub(now).Seconds())))
+		hs.Set("Cache-Control", fmt.Sprintf("public, max-age=%v", age))
 	}
 
 	c.next.ServeHTTP(w, req)
 }
 
 //
-func New(server http.Handler, options ...string) http.Handler {
-	return cached{server, options}
+func New(maxAge int, server http.Handler, options ...string) http.Handler {
+	return cached{
+		next:    server,
+		maxAge:  maxAge,
+		options: options,
+	}
 }

@@ -64,15 +64,35 @@ func New() testEndpoint {
 	}
 }
 
-// Convenience to get a go-kit type back of test's private endpoint type.
-func (e testEndpoint) Endpoint() endpoint.Endpoint {
+//
+func (e testEndpoint) Post() endpoint.Endpoint {
+	return endpoint.Endpoint(e)
+}
+
+//
+func (e testEndpoint) Get() endpoint.Endpoint {
+	return endpoint.Endpoint(e)
+}
+
+//
+func (e testEndpoint) Put() endpoint.Endpoint {
+	return endpoint.Endpoint(e)
+}
+
+//
+func (e testEndpoint) Patch() endpoint.Endpoint {
+	return endpoint.Endpoint(e)
+}
+
+//
+func (e testEndpoint) Delete() endpoint.Endpoint {
 	return endpoint.Endpoint(e)
 }
 
 // Request/response encoding and decoding.
 
-//
-func (e testEndpoint) Decoder(_ context.Context, r *http.Request) (interface{}, error) {
+// POST
+func (e testEndpoint) DecodePost(_ context.Context, r *http.Request) (interface{}, error) {
 	var request testRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
@@ -81,6 +101,59 @@ func (e testEndpoint) Decoder(_ context.Context, r *http.Request) (interface{}, 
 }
 
 //
-func (e testEndpoint) Encoder(_ context.Context, w http.ResponseWriter, response interface{}) error {
+func (e testEndpoint) EncodePost(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	return json.NewEncoder(w).Encode(response)
+}
+
+// GET
+func (e testEndpoint) DecodeGet(_ context.Context, r *http.Request) (interface{}, error) {
+	var request testRequest
+	return request, nil
+}
+
+//
+func (e testEndpoint) EncodeGet(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	return json.NewEncoder(w).Encode(response)
+}
+
+// PUT
+func (e testEndpoint) DecodePut(_ context.Context, r *http.Request) (interface{}, error) {
+	var request testRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
+//
+func (e testEndpoint) EncodePut(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	return json.NewEncoder(w).Encode(response)
+}
+
+// PATCH
+func (e testEndpoint) DecodePatch(_ context.Context, r *http.Request) (interface{}, error) {
+	var request testRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
+//
+func (e testEndpoint) EncodePatch(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	return json.NewEncoder(w).Encode(response)
+}
+
+// DELETE
+func (e testEndpoint) DecodeDelete(_ context.Context, r *http.Request) (interface{}, error) {
+	var request testRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
+//
+func (e testEndpoint) EncodeDelete(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
 }

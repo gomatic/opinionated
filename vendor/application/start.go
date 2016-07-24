@@ -7,86 +7,45 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"middleware/logging"
-	"service/login"
-	"service/testing"
-	"transport/http/caching"
-	"transport/http/content"
-	"transport/http/server"
-
-	httptransport "github.com/go-kit/kit/transport/http"
-	"golang.org/x/net/context"
 )
 
 //
 func Start() error {
 
 	// Serve public/
-	go func() {
-		static := strconv.Itoa(Settings.Port + 1)
-		fmt.Println("files on " + static)
-		http.ListenAndServe(":"+static, http.FileServer(http.Dir("public/")))
-	}()
-
-	mux := http.NewServeMux()
-	ctx := context.Background()
 
 	// Configure endpoints
 
-	// Login
+	mux := routeServices()
 
-	loginService := login.New()
-	loggedLogin := logging.New(nil)(loginService.Endpoint())
-
-	loginEncoder := server.New("opinionated", "gomatic/opinionated")(loginService.Encoder)
-	loginEncoder = content.New("application/json")(loginEncoder)
-
-	loginHandler := httptransport.NewServer(
-		ctx,
-		loggedLogin,
-		loginService.Decoder,
-		loginEncoder,
-	)
-
-	mux.Handle("/login", loginHandler)
-
-	// Testing
-
-	testService := testing.New()
-	loggedTest := logging.New(nil)(testService.Endpoint())
-
-	testEncoder := server.New("opinionated", "gomatic/opinionated")(testService.Encoder)
-	testEncoder = content.New("application/json")(testEncoder)
-
-	testHandler := httptransport.NewServer(
-		ctx,
-		loggedTest,
-		testService.Decoder,
-		testEncoder,
-	)
-
-	mux.Handle("/", caching.New(testHandler))
+	mux.Handle("/", http.FileServer(http.Dir("public/")))
 
 	// Start the server
 
 	port := strconv.Itoa(Settings.Port)
 	srv := &http.Server{
-		Addr:         ":" + port,
+		Addr:         "localhost:" + port,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		Handler:      mux,
 	}
 
-	if cer, err := tls.LoadX509KeyPair("server.crt", "server.key"); err != nil {
+	fmt.Println("listening on " + port)
+
+	if cert, err := tls.LoadX509KeyPair("server.crt", "server.key"); err != nil {
 		stderr.Println(err)
+
+		return srv.ListenAndServe()
 
 	} else {
 
-		srv.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
+		srv.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{
+				cert,
+			},
+		}
 
+		return srv.ListenAndServeTLS("server.crt", "server.key")
 	}
 
-	fmt.Println("listening on " + port)
-	return srv.ListenAndServe()
 }

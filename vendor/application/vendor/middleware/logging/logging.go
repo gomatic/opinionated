@@ -10,13 +10,28 @@ import (
 )
 
 //
-func New(logger log.Logger) endpoint.Middleware {
-	if logger == nil {
-		logger = log.NewLogfmtLogger(os.Stderr)
+type logger struct {
+	*log.Context
+}
+
+//
+func New(name string) *logger {
+	l := log.NewLogfmtLogger(os.Stderr)
+	c := log.NewContext(l).With("time", log.DefaultTimestampUTC)
+	if name != "" {
+		c = c.With("service", name)
 	}
-	logger = log.NewContext(logger).With("time", log.DefaultTimestampUTC)
+	return &logger{c}
+}
+
+//
+func (l *logger) Middleware() endpoint.Middleware {
+	if l == nil {
+		l = New("")
+	}
 
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		logger := log.Logger(l.Context)
 		return func(ctx context.Context, request interface{}) (interface{}, error) {
 			logger.Log("msg", "calling endpoint", next)
 			defer logger.Log("msg", "called endpoint")
