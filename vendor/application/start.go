@@ -1,7 +1,9 @@
 package application
 
 import (
+	"crypto/tls"
 	"fmt"
+	stderr "log"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,23 +21,18 @@ import (
 
 //
 func Start() error {
-	static := strconv.Itoa(Settings.Port + 1)
+
+	// Serve public/
 	go func() {
+		static := strconv.Itoa(Settings.Port + 1)
 		fmt.Println("files on " + static)
 		http.ListenAndServe(":"+static, http.FileServer(http.Dir("public/")))
 	}()
 
-	port := strconv.Itoa(Settings.Port)
 	mux := http.NewServeMux()
-
-	srv := &http.Server{
-		Addr:         ":" + port,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		Handler:      mux,
-	}
-
 	ctx := context.Background()
+
+	// Configure endpoints
 
 	// Login
 
@@ -71,7 +68,24 @@ func Start() error {
 
 	mux.Handle("/", caching.New(testHandler))
 
-	//
+	// Start the server
+
+	port := strconv.Itoa(Settings.Port)
+	srv := &http.Server{
+		Addr:         ":" + port,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Handler:      mux,
+	}
+
+	if cer, err := tls.LoadX509KeyPair("server.crt", "server.key"); err != nil {
+		stderr.Println(err)
+
+	} else {
+
+		srv.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
+
+	}
 
 	fmt.Println("listening on " + port)
 	return srv.ListenAndServe()
