@@ -1,3 +1,4 @@
+opinionated
 
 # Created by https://www.gitignore.io/api/go
 
@@ -26,4 +27,11 @@ _testmain.go
 *.exe
 *.test
 *.prof
-opinionated
+
+*.crt
+*.csr
+*.key
+*.rsa.crt
+*.rsa.key
+*.ecdsa.crt
+*.ecdsa.key
