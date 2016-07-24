@@ -1,0 +1,28 @@
+root = true
+
+[*]
+end_of_line = lf
+indent_size = 2
+indent_style = tab
+insert_final_newline = true
+trim_trailing_whitespace  = true
+insert_final_newline = true
+charset = utf-8
+
+[*.go]
+
+[*.{yaml,yml}]
+indent_style = space
+
+[{M,m}akefile]
+
+[*.js]
+
+[*.amber]
+
+[*.css]
+
+[*.sql]
+indent_style = space
+
+[*.md]
