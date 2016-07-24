@@ -7,6 +7,3 @@ type ChainResponseEncoders func(next httptransport.EncodeResponseFunc) httptrans
 
 //
 type ChainRequestDecoders func(next httptransport.DecodeRequestFunc) httptransport.DecodeRequestFunc
-
-//
-type ChainRequestResponse func(next httptransport.DecodeRequestFunc) (httptransport.DecodeRequestFunc, httptransport.EncodeResponseFunc)

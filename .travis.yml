@@ -1,0 +1,16 @@
+language: go
+go:
+  - 1.4
+  - 1.5
+  - tip
+notificaitons:
+  email:
+    recipients:
+      gomatic@nicerobot.org
+    on_success: change
+    on_failure: always
+install:
+  - go get -t ./...
+  - git submodule update --init
+script:
+  - go test -v
