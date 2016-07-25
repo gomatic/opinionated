@@ -5,6 +5,7 @@ import (
 	"fmt"
 	stderr "log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -29,26 +30,33 @@ func Start() error {
 		Handler:      mux,
 	}
 
-	fmt.Println("listening on " + srv.Addr)
+	message := "listening on " + srv.Addr
 
 	if Settings.Insecure {
 
-		return srv.ListenAndServe()
-
-	} else if cert, err := tls.LoadX509KeyPair("server.crt", "server.key"); err != nil {
-		stderr.Println(err)
-
+		fmt.Printf("HTTP %s\n", message)
 		return srv.ListenAndServe()
 
 	} else {
+		crt := filepath.Join(Settings.Program.Data, "server.crt")
+		key := filepath.Join(Settings.Program.Data, "server.key")
 
-		srv.TLSConfig = &tls.Config{
-			Certificates: []tls.Certificate{
-				cert,
-			},
+		if cert, err := tls.LoadX509KeyPair(crt, key); err != nil {
+			stderr.Println(err)
+
+			fmt.Printf("HTTP %s\n", message)
+			return srv.ListenAndServe()
+
+		} else {
+
+			srv.TLSConfig = &tls.Config{
+				Certificates: []tls.Certificate{
+					cert,
+				},
+			}
+
+			fmt.Printf("HTTPS %s\n", message)
+			return srv.ListenAndServeTLS(crt, key)
 		}
-
-		return srv.ListenAndServeTLS("server.crt", "server.key")
 	}
-
 }

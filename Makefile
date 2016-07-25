@@ -26,19 +26,19 @@ build $(APP_NAME): $(SOURCE) ## Build opinionated
 run: $(APP_NAME) ## Run opinionated
 	./$(APP_NAME)
 
-cert:
-	openssl req -new -sha256 -key server.key -out server.csr
-	openssl x509 -req -sha256 -in server.csr -signkey server.key -out server.crt -days 3650
+cert: data/server.csr
+
+data/server.csr: data/server.key
+	cd $(dir $@); openssl req -new -sha256 -key server.key -out server.csr -config example.conf
+	cd $(dir $@); openssl x509 -req -sha256 -in server.csr -signkey server.key -out server.crt -days 3650
 
 ecdsa:
-	openssl req -x509 -nodes -newkey ec:secp384r1 -keyout server.ecdsa.key -out server.ecdsa.crt -days 3650
-	ln -sf server.ecdsa.key server.key
-	ln -sf server.ecdsa.crt server.crt
+	cd data; openssl req -x509 -nodes -newkey ec:secp384r1 -keyout server.ecdsa.key -out server.ecdsa.crt -days 3650
+	cd data; ln -sf server.ecdsa.key server.key; ln -sf server.ecdsa.crt server.crt
 
-rsa:
-	openssl req -x509 -nodes -newkey rsa:2048 -keyout server.rsa.key -out server.rsa.crt -days 3650
-	ln -sf server.rsa.key server.key
-	ln -sf server.rsa.crt server.crt
+data/server.key:
+	cd $(dir $@); openssl req -x509 -nodes -newkey rsa:2048 -keyout server.rsa.key -out server.rsa.crt -days 3650 -config example.conf
+	cd $(dir $@); ln -sf server.rsa.key server.key; ln -sf server.rsa.crt server.crt
 
 
 help: ## This help.
