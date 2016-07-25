@@ -2,11 +2,11 @@ package application
 
 import (
 	"middleware/logging"
+	"net/http"
 	"service/login"
 	"service/testing"
 	"transport/http/caching"
-	"transport/http/content"
-	"transport/http/server"
+	"transport/http/headered"
 
 	"github.com/gorilla/mux"
 
@@ -31,12 +31,20 @@ func routeServices() *mux.Router {
 	return r
 }
 
+var (
+	servered = headered.New(func(hs http.Header) {
+		hs.Set("Server", Settings.Server)
+		hs.Set("X-Powered-By", Settings.Powered)
+	})
+	jsoned = headered.New(func(hs http.Header) {
+		hs.Set("Content-Type", "application/json")
+	})
+)
+
 //
 func routeLoginService(ctx context.Context, r *mux.Router) {
 
 	logged := logging.New("login").Middleware()
-	servered := server.New(Settings.Server+"/auth", Settings.Powered+"/auth")
-	json := content.New("application/json")
 
 	loginService := login.New()
 
@@ -46,7 +54,7 @@ func routeLoginService(ctx context.Context, r *mux.Router) {
 		ctx,
 		logged(loginService.Endpoint()),
 		loginService.Decoder,
-		servered(json(loginService.Encoder)),
+		servered(jsoned(loginService.Encoder)),
 	)).Name("POST")
 
 }
@@ -55,8 +63,6 @@ func routeLoginService(ctx context.Context, r *mux.Router) {
 func routeTestService(ctx context.Context, r *mux.Router) {
 
 	logged := logging.New("test").Middleware()
-	servered := server.New(Settings.Server, Settings.Powered)
-	json := content.New("application/json")
 
 	testService := testing.New()
 
@@ -66,7 +72,7 @@ func routeTestService(ctx context.Context, r *mux.Router) {
 		ctx,
 		logged(testService.Post()),
 		testService.DecodePost,
-		servered(json(testService.EncodePost)),
+		servered(jsoned(testService.EncodePost)),
 	)).Name("POST")
 
 	// GET     /:id
@@ -75,7 +81,7 @@ func routeTestService(ctx context.Context, r *mux.Router) {
 		ctx,
 		logged(testService.Get()),
 		testService.DecodeGet,
-		servered(json(testService.EncodeGet)),
+		servered(jsoned(testService.EncodeGet)),
 	))).Name("GET/POST Id")
 
 	// PUT     /:id
@@ -84,7 +90,7 @@ func routeTestService(ctx context.Context, r *mux.Router) {
 		ctx,
 		logged(testService.Put()),
 		testService.DecodePut,
-		servered(json(testService.EncodePut)),
+		servered(jsoned(testService.EncodePut)),
 	))).Name("PUT Id")
 
 	// PATCH   /:id
@@ -93,7 +99,7 @@ func routeTestService(ctx context.Context, r *mux.Router) {
 		ctx,
 		logged(testService.Patch()),
 		testService.DecodePatch,
-		servered(json(testService.EncodePatch)),
+		servered(jsoned(testService.EncodePatch)),
 	)).Name("PATCH Id")
 
 	// DELETE  /:id
@@ -102,7 +108,7 @@ func routeTestService(ctx context.Context, r *mux.Router) {
 		ctx,
 		logged(testService.Delete()),
 		testService.DecodeDelete,
-		servered(json(testService.EncodeDelete)),
+		servered(jsoned(testService.EncodeDelete)),
 	))).Name("DELETE Id")
 
 }

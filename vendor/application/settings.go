@@ -27,6 +27,7 @@ var Settings struct {
 		Folder string
 		Full   string
 		Data   string
+		Config string
 	}
 
 	Docs *url.URL
@@ -58,4 +59,11 @@ func init() {
 		data = "data"
 	}
 	Settings.Program.Data = filepath.Join(Settings.Program.Folder, data)
+
+	config := os.Getenv("CONFIG")
+	if config == "" {
+		Settings.Program.Config = filepath.Join(Settings.Program.Folder, "config/app.yaml")
+	} else {
+		Settings.Program.Config = config
+	}
 }

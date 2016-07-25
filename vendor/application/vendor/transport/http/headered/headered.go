@@ -1,4 +1,4 @@
-package server
+package headered
 
 import (
 	"net/http"
@@ -9,14 +9,14 @@ import (
 	"golang.org/x/net/context"
 )
 
-func New(server, powered string) chain.ChainResponseEncoders {
+//
+type Headered func(http.Header)
+
+//
+func New(hf Headered) chain.ChainResponseEncoders {
 	return func(next httptransport.EncodeResponseFunc) httptransport.EncodeResponseFunc {
 		return func(ctx context.Context, resp http.ResponseWriter, i interface{}) error {
-
-			hs := resp.Header()
-			hs.Set("Server", server)
-			hs.Set("X-Powered-By", powered)
-
+			hf(resp.Header())
 			return next(ctx, resp, i)
 		}
 	}

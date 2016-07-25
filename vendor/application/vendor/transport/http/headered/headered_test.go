@@ -1,4 +1,4 @@
-package content
+package headered
 
 import "testing"
 
@@ -8,6 +8,6 @@ func TestMain(m *testing.M) {
 }
 
 //
-func TestContent(t *testing.T) {
+func TestHeadered(t *testing.T) {
 
 }
