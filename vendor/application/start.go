@@ -22,17 +22,20 @@ func Start() error {
 
 	// Start the server
 
-	port := strconv.Itoa(Settings.Port)
 	srv := &http.Server{
-		Addr:         "localhost:" + port,
+		Addr:         Settings.Addr + ":" + strconv.Itoa(Settings.Port),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		Handler:      mux,
 	}
 
-	fmt.Println("listening on " + port)
+	fmt.Println("listening on " + srv.Addr)
 
-	if cert, err := tls.LoadX509KeyPair("server.crt", "server.key"); err != nil {
+	if Settings.Insecure {
+
+		return srv.ListenAndServe()
+
+	} else if cert, err := tls.LoadX509KeyPair("server.crt", "server.key"); err != nil {
 		stderr.Println(err)
 
 		return srv.ListenAndServe()

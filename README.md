@@ -16,6 +16,7 @@ See the [wiki](https://github.com/gomatic/opinionated/wiki) for design ideas and
   - [x] logging
   - [x] caching
   - [x] headers
+- [ ] tests
 - [ ] auth
   - [ ] facebook
   - [ ] google
@@ -28,6 +29,7 @@ See the [wiki](https://github.com/gomatic/opinionated/wiki) for design ideas and
 ### Client
 
 - [ ] landing page
+- [ ] tests
 - [ ] auth
   - [ ] facebook
   - [ ] google

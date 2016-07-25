@@ -2,8 +2,8 @@ package main
 
 import (
 	_ "expvar"
-	"log"
 	"os"
+	"strings"
 
 	"application"
 
@@ -40,6 +40,10 @@ func main() {
 		if application.Settings.Debugger {
 			application.Debugger()
 		}
+		application.Settings.Mode = strings.ToLower(application.Settings.Mode)
+		if application.Settings.Addr == "" && application.Settings.Mode == "development" {
+			application.Settings.Addr = "localhost"
+		}
 		return nil
 	}
 
@@ -49,8 +53,7 @@ func main() {
 			Aliases: []string{"configure", "config"},
 			Usage:   "Configure.",
 			Action: func(ctx *cli.Context) error {
-				log.Println(application.Configure())
-				return nil
+				return application.Configure()
 			},
 		},
 		cli.Command{
@@ -58,8 +61,7 @@ func main() {
 			Aliases: []string{"manage", "administer", "admin"},
 			Usage:   "Administer.",
 			Action: func(ctx *cli.Context) error {
-				log.Println(application.Manage())
-				return nil
+				return application.Manage()
 			},
 		},
 		cli.Command{
@@ -67,16 +69,44 @@ func main() {
 			Aliases: []string{"server", "serve", "run"},
 			Usage:   "Run.",
 			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:        "address, a",
+					Usage:       "Bind to address.",
+					Value:       "",
+					Destination: &application.Settings.Addr,
+				},
 				cli.IntFlag{
 					Name:        "port, p",
 					Usage:       "Server port.",
 					Value:       3000,
 					Destination: &application.Settings.Port,
 				},
+				cli.BoolFlag{
+					Name:        "insecure, k",
+					Usage:       "Disable TLS server.",
+					Destination: &application.Settings.Insecure,
+				},
+				cli.BoolFlag{
+					Name:        "verbose, v",
+					Usage:       "Enable verbose server.",
+					Destination: &application.Settings.Verbose,
+				},
+				cli.StringFlag{
+					Name:        "mode",
+					Usage:       "Provide a run-mode.",
+					EnvVar:      "DEPLOYMENT",
+					Destination: &application.Settings.Mode,
+				},
+			},
+			Before: func(ctx *cli.Context) error {
+				application.Settings.Mode = strings.ToLower(application.Settings.Mode)
+				if application.Settings.Addr == "" && application.Settings.Mode == "development" {
+					application.Settings.Addr = "localhost"
+				}
+				return nil
 			},
 			Action: func(ctx *cli.Context) error {
-				log.Println(application.Start())
-				return nil
+				return application.Start()
 			},
 		},
 	}

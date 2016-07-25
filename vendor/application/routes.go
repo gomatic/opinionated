@@ -35,7 +35,7 @@ func routeServices() *mux.Router {
 func routeLoginService(ctx context.Context, r *mux.Router) {
 
 	logged := logging.New("login").Middleware()
-	servered := server.New("opinionated/auth", "gomatic/opinionated/auth")
+	servered := server.New(Settings.Server+"/auth", Settings.Powered+"/auth")
 	json := content.New("application/json")
 
 	loginService := login.New()
@@ -55,16 +55,12 @@ func routeLoginService(ctx context.Context, r *mux.Router) {
 func routeTestService(ctx context.Context, r *mux.Router) {
 
 	logged := logging.New("test").Middleware()
-	servered := server.New("opinionated", "gomatic/opinionated")
+	servered := server.New(Settings.Server, Settings.Powered)
 	json := content.New("application/json")
 
 	testService := testing.New()
 
 	// POST    /
-	// GET     /:id
-	// PUT     /:id
-	// PATCH   /:id
-	// DELETE  /:id
 
 	r.Methods("POST").Path("/").Handler(httptransport.NewServer(
 		ctx,
@@ -72,30 +68,36 @@ func routeTestService(ctx context.Context, r *mux.Router) {
 		testService.DecodePost,
 		servered(json(testService.EncodePost)),
 	)).Name("POST")
-	r.Methods("POST").Path("/{id}").Handler(httptransport.NewServer(
+
+	// GET     /:id
+
+	r.Methods("POST", "GET").Path("/{id}").Handler(caching.New(-1, httptransport.NewServer(
 		ctx,
 		logged(testService.Get()),
 		testService.DecodeGet,
 		servered(json(testService.EncodeGet)),
-	)).Name("POST Id")
-	r.Methods("GET").Path("/{id}").Handler(caching.New(-1, httptransport.NewServer(
-		ctx,
-		logged(testService.Get()),
-		testService.DecodeGet,
-		servered(json(testService.EncodeGet)),
-	))).Name("GET Id")
+	))).Name("GET/POST Id")
+
+	// PUT     /:id
+
 	r.Methods("PUT").Path("/{id}").Handler(caching.New(-1, httptransport.NewServer(
 		ctx,
 		logged(testService.Put()),
 		testService.DecodePut,
 		servered(json(testService.EncodePut)),
 	))).Name("PUT Id")
+
+	// PATCH   /:id
+
 	r.Methods("PATCH").Path("/{id}").Handler(httptransport.NewServer(
 		ctx,
 		logged(testService.Patch()),
 		testService.DecodePatch,
 		servered(json(testService.EncodePatch)),
 	)).Name("PATCH Id")
+
+	// DELETE  /:id
+
 	r.Methods("DELETE").Path("/{id}").Handler(caching.New(-1, httptransport.NewServer(
 		ctx,
 		logged(testService.Delete()),

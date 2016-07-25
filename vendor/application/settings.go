@@ -5,9 +5,12 @@ import "net/url"
 //
 var Settings struct {
 	Debugger bool
+	Verbose  bool
 	Mode     string
 
-	Port int
+	Addr     string
+	Port     int
+	Insecure bool
 
 	Server  string
 	Powered string
