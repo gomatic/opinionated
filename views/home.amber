@@ -1,0 +1,7 @@
+html
+    head
+        title Opinionated
+    body
+        div#content
+            p
+                a[href="/"] Home

@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
+
+	"service/view"
 )
 
 //
@@ -17,24 +20,28 @@ func Start() error {
 
 	// Configure endpoints
 
-	mux := routeServices()
+	routes := routeServices()
 
-	mux.Handle("/", http.FileServer(http.Dir("public/")))
+	routes.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public/"))))
+	routes.PathPrefix("/views/").Handler(http.StripPrefix("/views/", view.Server(http.Dir("views/"))))
 
 	// Start the server
 
+	privPort := strconv.Itoa(Settings.Port)
+	pubPort := "80"
+	if Settings.Port != 443 || Settings.Port >= 3000 {
+		pubPort = strconv.Itoa(Settings.Port - 443)
+	}
 	srv := &http.Server{
-		Addr:         Settings.Addr + ":" + strconv.Itoa(Settings.Port),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		Handler:      mux,
+		Handler:      routes,
 	}
-
-	message := "listening on " + srv.Addr
 
 	if Settings.Insecure {
 
-		fmt.Printf("HTTP %s\n", message)
+		srv.Addr = Settings.Addr + ":" + pubPort
+		stderr.Printf("HTTP %s\n", srv.Addr)
 		return srv.ListenAndServe()
 
 	} else {
@@ -44,7 +51,8 @@ func Start() error {
 		if cert, err := tls.LoadX509KeyPair(crt, key); err != nil {
 			stderr.Println(err)
 
-			fmt.Printf("HTTP %s\n", message)
+			srv.Addr = Settings.Addr + ":" + pubPort
+			stderr.Printf("HTTP %s\n", srv.Addr)
 			return srv.ListenAndServe()
 
 		} else {
@@ -55,7 +63,27 @@ func Start() error {
 				},
 			}
 
-			fmt.Printf("HTTPS %s\n", message)
+			{
+				routes := http.NewServeMux()
+				pub := &http.Server{
+					Addr:         Settings.Addr + ":" + pubPort,
+					ReadTimeout:  srv.ReadTimeout,
+					WriteTimeout: srv.WriteTimeout,
+					Handler:      routes,
+				}
+
+				routes.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+					host := strings.Split(req.Host, ":")
+					forward := fmt.Sprintf("https://%s:%s%s", host[0], privPort, req.RequestURI)
+					stderr.Println("Forwarding to " + forward)
+					http.Redirect(w, req, forward, http.StatusMovedPermanently)
+				})
+				stderr.Printf("HTTP %s\n", pub.Addr)
+				go pub.ListenAndServe()
+			}
+
+			srv.Addr = Settings.Addr + ":" + privPort
+			stderr.Printf("HTTPS %s\n", srv.Addr)
 			return srv.ListenAndServeTLS(crt, key)
 		}
 	}

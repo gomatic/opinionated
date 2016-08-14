@@ -78,7 +78,7 @@ func main() {
 				cli.IntFlag{
 					Name:        "port, p",
 					Usage:       "Server port.",
-					Value:       3000,
+					Value:       3443,
 					Destination: &application.Settings.Port,
 				},
 				cli.BoolFlag{
