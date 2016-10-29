@@ -15,11 +15,16 @@ type logger struct {
 }
 
 //
-func New(name string) *logger {
+func New(options ...string) *logger {
 	l := log.NewLogfmtLogger(os.Stderr)
 	c := log.NewContext(l).With("time", log.DefaultTimestampUTC)
-	if name != "" {
-		c = c.With("service", name)
+	for i := len(options) - 1; i >= 0; i-- {
+		switch i {
+		case 0:
+			c = c.With("service", options[i])
+		case 1:
+			c = c.With("app", options[i])
+		}
 	}
 	return &logger{c}
 }

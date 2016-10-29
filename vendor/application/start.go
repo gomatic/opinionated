@@ -29,8 +29,8 @@ func Start() error {
 
 	privPort := strconv.Itoa(Settings.Port)
 	pubPort := "80"
-	if Settings.Port != 443 || Settings.Port >= 3000 {
-		pubPort = strconv.Itoa(Settings.Port - 443)
+	if Settings.Port != 443 || Settings.Port >= 3443 {
+		pubPort = strconv.Itoa(Settings.Port - 363)
 	}
 	srv := &http.Server{
 		ReadTimeout:  5 * time.Second,
