@@ -30,4 +30,4 @@
 	url = https://github.com/boltdb/bolt.git
 [submodule "vendor/application/vendor/github.com/graphql-go/graphql"]
 	path = vendor/application/vendor/github.com/graphql-go/graphql
-	url = git@github.com:graphql-go/graphql
+	url = https://github.com/graphql-go/graphql
