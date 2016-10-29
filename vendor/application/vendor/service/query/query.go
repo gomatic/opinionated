@@ -3,11 +3,11 @@ package query
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-kit/kit/endpoint"
-
+	"github.com/graphql-go/graphql"
 	"golang.org/x/net/context"
 )
 
@@ -20,7 +20,7 @@ var ErrNoQuery = errors.New("empty query")
 
 // Query operations.
 type Service interface {
-	Query(string) (string, error)
+	Query(string) (*graphql.Result, error)
 }
 
 // Private Query model.
@@ -28,21 +28,21 @@ type queryService struct{}
 
 // Query requests.
 type queryRequest struct {
-	S string `json:"s"`
+	S string `json:"query"`
 }
 
-// Query response.
-type queryResponse struct {
-	V   string `json:"v"`
-	Err string `json:"err,omitempty"` // errors don't define JSON marshaling
-}
+var (
+	schema graphql.Schema
+)
 
 //
-func (queryService) Query(s string) (string, error) {
-	if s == "" {
-		return "", ErrNoQuery
+func (queryService) Query(query string) (*graphql.Result, error) {
+	params := graphql.Params{Schema: schema, RequestString: query}
+	r := graphql.Do(params)
+	if len(r.Errors) > 0 {
+		return nil, fmt.Errorf("failed to execute graphql operation, errors: %+v", r.Errors)
 	}
-	return strings.ToUpper(s), nil
+	return r, nil
 }
 
 // Initialization
@@ -51,17 +51,32 @@ func (queryService) Query(s string) (string, error) {
 type queryEndpoint endpoint.Endpoint
 
 //
-func New() queryEndpoint {
+func New() (endpoint queryEndpoint, err error) {
 	svc := queryService{}
 
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(queryRequest)
-		v, err := svc.Query(req.S)
-		if err != nil {
-			return queryResponse{v, err.Error()}, nil
-		}
-		return queryResponse{v, ""}, nil
+	// Schema
+	fields := graphql.Fields{
+		"hello": &graphql.Field{
+			Type: graphql.String,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				return "world", nil
+			},
+		},
 	}
+	rootQuery := graphql.ObjectConfig{Name: "Query", Fields: fields}
+	schemaConfig := graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
+
+	schema, err = graphql.NewSchema(schemaConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint = func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(queryRequest)
+		return svc.Query(req.S)
+	}
+
+	return endpoint, nil
 }
 
 // Convenience to get a go-kit type back of query's private endpoint type.

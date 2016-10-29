@@ -15,17 +15,22 @@ import (
 //
 func routeQueryService(ctx context.Context, r *mux.Router) {
 
-	logged := logging.New("query", Settings.Program.Name).Middleware()
+	logger := logging.New("query", Settings.Program.Name)
+	logged := logger.Middleware()
 
-	queryService := query.New()
+	queryService, err := query.New()
+	if err != nil {
+		logger.Log("error", err.Error())
+		return
+	}
 
-	// GET     /:id
+	// POST     /:id
 
-	r.Methods("GET").Path("/{id}").Handler(caching.New(-1, httptransport.NewServer(
+	r.Methods("POST", "GET").Path("/{id}").Handler(caching.New(-1, httptransport.NewServer(
 		ctx,
 		logged(queryService.Endpoint()),
 		queryService.Decoder,
 		servered(jsoned(queryService.Encoder)),
-	))).Name("GET Id")
+	))).Name("GET/POST Id")
 
 }

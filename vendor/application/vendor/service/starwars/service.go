@@ -3,11 +3,13 @@ package starwars
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/go-kit/kit/endpoint"
-
+	"github.com/gorilla/mux"
+	"github.com/graphql-go/graphql"
 	"golang.org/x/net/context"
 )
 
@@ -20,29 +22,20 @@ var ErrNoQuery = errors.New("empty starwars")
 
 // Query operations.
 type Service interface {
-	Query(string) (string, error)
+	Query(string) (*graphql.Result, error)
 }
 
 // Private Query model.
 type starwarsService struct{}
 
-// Query requests.
-type starwarsRequest struct {
-	S string `json:"s"`
-}
-
-// Query response.
-type starwarsResponse struct {
-	V   string `json:"v"`
-	Err string `json:"err,omitempty"` // errors don't define JSON marshaling
-}
-
 //
-func (starwarsService) Query(s string) (string, error) {
-	if s == "" {
-		return "", ErrNoQuery
+func (starwarsService) Query(query string) (*graphql.Result, error) {
+	params := graphql.Params{Schema: StarWarsSchema, RequestString: query}
+	r := graphql.Do(params)
+	if len(r.Errors) > 0 {
+		return nil, fmt.Errorf("failed to execute graphql operation, errors: %+v", r.Errors)
 	}
-	return strings.ToUpper(s), nil
+	return r, nil
 }
 
 // Initialization
@@ -51,17 +44,14 @@ func (starwarsService) Query(s string) (string, error) {
 type starwarsEndpoint endpoint.Endpoint
 
 //
-func New() starwarsEndpoint {
+func New() (endpoint starwarsEndpoint, err error) {
 	svc := starwarsService{}
 
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(starwarsRequest)
-		v, err := svc.Query(req.S)
-		if err != nil {
-			return starwarsResponse{v, err.Error()}, nil
-		}
-		return starwarsResponse{v, ""}, nil
+	endpoint = func(ctx context.Context, request interface{}) (interface{}, error) {
+		return svc.Query(request.(string))
 	}
+
+	return endpoint, nil
 }
 
 // Convenience to get a go-kit type back of starwars's private endpoint type.
@@ -72,12 +62,21 @@ func (e starwarsEndpoint) Endpoint() endpoint.Endpoint {
 // Request/response encoding and decoding.
 
 //
-func (e starwarsEndpoint) Decoder(_ context.Context, r *http.Request) (interface{}, error) {
-	var request starwarsRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
+func (e starwarsEndpoint) Decoder(ctx context.Context, r *http.Request) (interface{}, error) {
+	vars := mux.Vars(r)
+	if q, exists := vars["query"]; exists && q != "" {
+		return q, nil
 	}
-	return request, nil
+	query := r.URL.Query()
+	if q := query.Get("query"); q != "" {
+		return string(q), nil
+	}
+	if q, err := ioutil.ReadAll(r.Body); err != nil {
+		return nil, err
+	} else if len(q) != 0 {
+		return string(q), nil
+	}
+	return nil, fmt.Errorf("Requires a query")
 }
 
 //

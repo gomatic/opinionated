@@ -15,9 +15,23 @@ import (
 //
 func routeStarWarsService(ctx context.Context, r *mux.Router) {
 
-	logged := logging.New("starwars", Settings.Program.Name).Middleware()
+	logger := logging.New("starwars", Settings.Program.Name)
+	logged := logger.Middleware()
 
-	starWarsService := starwars.New()
+	starWarsService, err := starwars.New()
+	if err != nil {
+		logger.Log("error", err.Error())
+		return
+	}
+
+	// POST     /:query
+
+	r.Methods("POST").Path("/").Handler(caching.New(-1, httptransport.NewServer(
+		ctx,
+		logged(starWarsService.Endpoint()),
+		starWarsService.Decoder,
+		servered(jsoned(starWarsService.Encoder)),
+	))).Name("POST")
 
 	// GET     /:query
 
@@ -26,6 +40,6 @@ func routeStarWarsService(ctx context.Context, r *mux.Router) {
 		logged(starWarsService.Endpoint()),
 		starWarsService.Decoder,
 		servered(jsoned(starWarsService.Encoder)),
-	))).Name("GET Id")
+	))).Name("GET Query")
 
 }
