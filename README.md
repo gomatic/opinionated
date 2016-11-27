@@ -10,12 +10,13 @@ See the [wiki](https://github.com/gomatic/opinionated/wiki) for design ideas and
 
 ### Server
 
-- [x] basic server on go-kit
-  - [x] static files
-- [x] middlewares
-  - [x] logging
-  - [x] caching
-  - [x] headers
+- [x] basic server on goa
+  - [ ] static files
+- [ ] middlewares
+  - [ ] logging
+  - [ ] caching
+  - [ ] headers
+- [ ] tls
 - [ ] tests
 - [ ] auth
   - [ ] facebook

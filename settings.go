@@ -34,6 +34,12 @@ var Settings struct {
 }
 
 //
+const MAJOR = "0.1"
+
+// DO NOT UPDATE. This is populated by the build. See the Makefile.
+var VERSION = "0"
+
+//
 func init() {
 	Settings.Program.Full = os.Args[0]
 	Settings.Program.Name = filepath.Base(Settings.Program.Full)
