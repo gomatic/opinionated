@@ -22,9 +22,6 @@
 [submodule "vendor/application/vendor/github.com/gorilla/context"]
 	path = vendor/application/vendor/github.com/gorilla/context
 	url = https://github.com/gorilla/context.git
-[submodule "vendor/github.com/urfave/cli"]
-	path = vendor/github.com/urfave/cli
-	url = https://github.com/urfave/cli.git
 [submodule "vendor/application/vendor/github.com/boltdb/bolt"]
 	path = vendor/application/vendor/github.com/boltdb/bolt
 	url = https://github.com/boltdb/bolt.git
