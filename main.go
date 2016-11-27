@@ -109,30 +109,26 @@ func main() {
 					pubPort = strconv.Itoa(Settings.Port - 363)
 				}
 
-				addr := Settings.Addr + ":" + pubPort
-
-				if !Settings.Secure {
-
-					stderr.Printf("HTTP %s\n", addr)
-					return service.ListenAndServe(addr)
-
-				} else {
+				switch Settings.Secure {
+				case true:
 					crt := filepath.Join(Settings.Program.Data, "server.crt")
 					key := filepath.Join(Settings.Program.Data, "server.key")
 
-					if _, err := tls.LoadX509KeyPair(crt, key); err != nil {
-						stderr.Println(err)
-
-						stderr.Printf("HTTP %s\n", addr)
-						return service.ListenAndServe(addr)
-
-					} else {
-
+					_, err := tls.LoadX509KeyPair(crt, key)
+					if err == nil {
 						addr := Settings.Addr + ":" + privPort
 						stderr.Printf("HTTPS %s\n", addr)
 						return service.ListenAndServeTLS(addr, crt, key)
 					}
+					stderr.Println(err)
+					fallthrough
+
+				case false:
+					addr := Settings.Addr + ":" + pubPort
+					stderr.Printf("HTTP %s\n", addr)
+					return service.ListenAndServe(addr)
 				}
+				return nil
 			},
 		},
 	}

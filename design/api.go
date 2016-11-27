@@ -10,6 +10,8 @@ var _ = API("opinionated", func() {
 	Description("A basic starter service")
 	Scheme("http")
 	Host("localhost:3080")
+	Consumes("application/json")
+	Produces("application/json")
 })
 
 var _ = Resource("user", func() {
