@@ -23,8 +23,8 @@ build $(APP_NAME): $(SOURCE) ## Build opinionated
 	go build -ldflags "-X main.VERSION=$(COMMIT_TIME)-$(COMMIT_ID)" -o $(APP_NAME)
 
 
-run: $(APP_NAME) ## Run opinionated
-	./$(APP_NAME)
+run start: $(APP_NAME) ## Run opinionated
+	./$(APP_NAME) $@
 
 cert: data/server.csr
 

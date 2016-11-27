@@ -16,7 +16,7 @@ See the [wiki](https://github.com/gomatic/opinionated/wiki) for design ideas and
   - [ ] logging
   - [ ] caching
   - [ ] headers
-- [ ] tls
+- [x] tls
 - [ ] tests
 - [ ] auth
   - [ ] facebook

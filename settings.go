@@ -14,9 +14,9 @@ var Settings struct {
 	Verbose  bool
 	Mode     string
 
-	Addr     string
-	Port     int
-	Insecure bool
+	Addr   string
+	Port   int
+	Secure bool
 
 	Server  string
 	Powered string
