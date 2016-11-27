@@ -2,11 +2,14 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	stderr "log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/urfave/cli"
 )
@@ -94,6 +97,8 @@ func main() {
 				// Create service
 				srv := service()
 
+				pubAddr := Settings.Addr + ":" + pubPort
+
 				switch Settings.Secure {
 				case true:
 					crt := filepath.Join(Settings.Program.Data, "server.crt")
@@ -101,17 +106,36 @@ func main() {
 
 					_, err := tls.LoadX509KeyPair(crt, key)
 					if err == nil {
-						addr := Settings.Addr + ":" + privPort
-						stderr.Printf("HTTPS %s\n", addr)
-						return srv.ListenAndServeTLS(addr, crt, key)
+
+						{
+							routes := http.NewServeMux()
+							pub := &http.Server{
+								Addr:         pubAddr,
+								ReadTimeout:  5 * time.Second,
+								WriteTimeout: 10 * time.Second,
+								Handler:      routes,
+							}
+
+							routes.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+								host := strings.Split(req.Host, ":")
+								forward := fmt.Sprintf("https://%s:%s%s", host[0], privPort, req.RequestURI)
+								stderr.Println("Forwarding to " + forward)
+								http.Redirect(w, req, forward, http.StatusMovedPermanently)
+							})
+							stderr.Printf("HTTP %s\n", pub.Addr)
+							go pub.ListenAndServe()
+						}
+
+						privAddr := Settings.Addr + ":" + privPort
+						stderr.Printf("HTTPS %s\n", privAddr)
+						return srv.ListenAndServeTLS(privAddr, crt, key)
 					}
 					stderr.Println(err)
 					fallthrough
 
 				case false:
-					addr := Settings.Addr + ":" + pubPort
-					stderr.Printf("HTTP %s\n", addr)
-					return srv.ListenAndServe(addr)
+					stderr.Printf("HTTP %s\n", pubAddr)
+					return srv.ListenAndServe(pubAddr)
 				}
 				return nil
 			},
