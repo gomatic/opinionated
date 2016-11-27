@@ -1,0 +1,62 @@
+consumes:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+definitions:
+  Json:
+    description: Credentials (default view)
+    example:
+      id: Nihil assumenda dolorum quasi ratione nisi aut.
+    properties:
+      id:
+        description: Username
+        example: Nihil assumenda dolorum quasi ratione nisi aut.
+        type: string
+    required:
+    - id
+    title: 'Mediatype identifier: application/json'
+    type: object
+host: localhost:3080
+info:
+  description: A basic starter service
+  title: An opinionated application starter
+  version: ""
+paths:
+  /u/{username}:
+    get:
+      description: Login
+      operationId: user#login
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Json'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: login user
+      tags:
+      - user
+produces:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+responses:
+  NotFound:
+    description: Not Found
+  OK:
+    description: OK
+    schema:
+      $ref: '#/definitions/Json'
+schemes:
+- http
+swagger: "2.0"
